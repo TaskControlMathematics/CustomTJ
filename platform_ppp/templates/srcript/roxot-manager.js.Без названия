@@ -1,0 +1,22 @@
+(function (c) {
+    if (isEngineInited()){
+        return;
+    }
+
+    let script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.async = 1;
+    script.src = c.managerUrl;
+    script.dataset.roxotInited = 'true';
+
+    let head = document.getElementsByTagName('head')[0];
+    head.insertBefore(script, head.firstChild);
+
+    window.rom = window.rom || {cmd: [], icmd: []};
+    window.rom.icmd = window.rom.icmd || [];
+    window.rom.icmd.push(c);
+
+    function isEngineInited(){
+        return  document.querySelectorAll('[data-roxot-inited]').length;
+    }
+})({"publisherId":"4fd6e495-3dd3-49f7-9ea4-c2723f15c54c","adBlockMode":"iframe","engineFileName":null,"managerUrl":"https:\/\/cdn-plus.roxot-panel.com\/wrapper\/js\/manager-engine.js?v=s-44f51ce3-8b31-48d1-8daa-02738b259c51","wrapperUrl":"https:\/\/cdn-plus.roxot-panel.com\/wrapper\/js\/wrapper.js?v=s-44f51ce3-8b31-48d1-8daa-02738b259c51","placementConfigTemplate":"https:\/\/cdn-plus.roxot-panel.com\/wrapper-builder\/placement\/__PLACEMENT_ID__?v=d-ee3a7b8e-b46e-4df9-a665-d34a22aecd6f","gfsPlacementOptionsTemplate":"https:\/\/cdn-plus.roxot-panel.com\/wrapper-builder\/gfs-placement\/__PLACEMENT_ID__?v=d-ee3a7b8e-b46e-4df9-a665-d34a22aecd6f","isLanguageSpecific":false,"hostConfig":{"coub.com":{"wrapperOptions":[],"isAcceptableAdsEnabled":false},"vc.ru":{"wrapperOptions":[],"isAcceptableAdsEnabled":false},"tjournal.ru":{"wrapperOptions":[],"isAcceptableAdsEnabled":false}},"isBrowserSpecific":true,"isOsSpecific":false,"isDeviceTypeSpecific":false,"dynamicUrlTemplate":"","wrapperConfig":{"prebid":{"adjustment":{"getintent":0.5,"otm":0.9,"rtbhouse":0.7,"rubicon":0.9,"segmento":0.85},"path":"https:\/\/cdn-plus.roxot-panel.com\/wrapper\/js\/prebid.js?v=s-44f51ce3-8b31-48d1-8daa-02738b259c51"},"adfox":{"hb":{"biddersMap":{"betweenDigital":"1471719","myTarget":"1471718","otm":"1471725","mgid":"1460172","segmento":"1496136","adriver":"1508036","buzzoola":"1547542","rtbhouse":"1393902","criteo":"1393905","getintent":"1393904","videonow":"1407059"},"timeout":1000}},"pageUrlVariableName":"roxotPlusPageUrl"},"lazyLoading":[]})

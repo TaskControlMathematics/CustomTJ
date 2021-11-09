@@ -1,0 +1,271 @@
+/**
+ * @typedef {object} ParagraphConfig
+ * @property {string} [placeholder] - custom placeholder specified by user
+ */
+
+/**
+ * @typedef {object} ParagraphData
+ * @property {string} text - just a content
+ */
+
+/**
+ * @typedef {import('../../src/modules/api')} Api
+ */
+
+/**
+ * Base paragraph plugin
+ */
+// eslint-disable-next-line no-unused-vars
+class Paragraph {
+  /**
+   * Plugin title that will be shown on toolbox hover
+   *
+   * @returns {string}
+   */
+  static get title() {
+    return 'Текст';
+  }
+
+  /**
+   * Enable to showing inline toolbar
+   *
+   * @returns {boolean}
+   */
+  static get inlineToolbar() {
+    return true;
+  }
+
+  /**
+   * Name of icon for the Toolbox
+   *
+   * @returns {string}
+   */
+  static get iconClassname() {
+    return 'ce-paragraph__icon';
+  }
+
+  /**
+   * Return true to enable paste-behaviour that detects links to external services
+   * For example, plugin Paragraph can handle paste links to the Instagram, Twitter etc
+   *
+   * @see renderOnPastePatterns
+   *
+   * @returns {boolean}
+   */
+  static get allowRenderOnPaste() {
+    return true;
+  }
+
+  /**
+   * Class will be constructed on every block addition
+   * Useful to incapsulate plugin's nodes, settings and other stuff in the instance
+   *
+   * @param {object} options - block params
+   * @param {Api} options.api - editor API object
+   * @param {ParagraphConfig} options.config - user config
+   */
+  constructor({ api, config } = {}) {
+    this.wrapper = null;
+    this.api = api;
+    this.config = config;
+  }
+
+  /**
+   * Render method
+   *
+   * @param  {object} savedData  - object with data in format that returned by save method
+   *
+   * @returns {Element}
+   */
+  render(savedData) {
+    const div = document.createElement('div');
+
+    div.classList.add('ce-paragraph');
+    div.innerHTML = savedData && Object.keys(savedData).length ? savedData.text : '';
+    div.contentEditable = true;
+
+    let placeholder = 'Нажмите Tab для выбора инструмента';
+
+    if (this.config && this.config.placeholder !== undefined) {
+      placeholder = this.config.placeholder;
+    }
+
+    div.setAttribute('data-placeholder', placeholder);
+
+    this.wrapper = div;
+
+    return div;
+  }
+
+  /**
+   * Create Block Settings elements
+   *
+   * @returns {Element}
+   */
+  makeSettings() {
+    const div = this.createConverterButton(false);
+
+    div.classList.add('cdx-plugin-settings__item');
+
+    return div;
+  }
+
+  /**
+   * Creates the button for converting Paragraph to Header
+   *
+   * @param {boolean} onlyIcon - pass true to create a toggler without the text label
+   * @returns {Element}
+   */
+  createConverterButton(onlyIcon) {
+    const div = document.createElement('div');
+
+    div.classList.add('cdx-plugin-settings__item');
+
+    div.innerHTML = `
+      <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+        <path d="M10 4.167v11.667M18.333 4.167v11.667M10 10h7.5M1.667 4.167v5.417c0 .92.746 1.666 1.666 1.666H6.25" stroke="#000" stroke-width="1.667" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 9.167l1.667 2.083L5 13.334" stroke="#000" stroke-width="1.667" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      ${onlyIcon ? '' : 'Сделать подзаголовком'}
+    `;
+
+    div.addEventListener('click', () => {
+      /**
+       * Remember block ID to replace it
+       *
+       * @type {string}
+       */
+      const currentBlockId = this.api.getCurrentBlockId();
+
+      this.api.oustBlock(currentBlockId, {
+        type: 'header',
+        data: {
+          text: this.sanitizeString(this.wrapper.innerHTML),
+          level: 2
+        }
+      });
+
+      this.api.closeEveryBlockSettings();
+      this.api.toolbar.close();
+    });
+
+    return div;
+  }
+
+  /**
+   * Creates controls for displaying at the Mobile Toolbar
+   *
+   * @deprecated Currently deprecated, but left for the future, see {@link ../../docs/mobile-toolbar.md#deprecation-notice}
+   *
+   * @returns {Element}
+   */
+  makeMobileToolbarSettings() {
+    return this.createConverterButton(true);
+  }
+
+  /**
+   * Saving method
+   *
+   * @param {Element} blockContent - block returned by render method
+   * @returns {Promise<ParagraphData>}
+   */
+  save(blockContent) {
+    return new Promise((resolve) => {
+      const wrappedText = this.api.wrapWithParagraphs(blockContent.innerHTML);
+
+      resolve({
+        text: this.sanitizeString(wrappedText),
+        format: 'html',
+        // eslint-disable-next-line camelcase
+        text_truncated: '<<<same>>>'
+      });
+    });
+  }
+
+  /**
+   * Saved data validation
+   * If returns false, tool will be skipped on Editor saving
+   *
+   * @param  {object} savedData  - same structure as save method return-value
+   *
+   * @returns {boolean}
+   */
+  validate(savedData) {
+    return !!(savedData && savedData.text);
+  }
+
+  /**
+   * Config describing how to convert the Block data to/from the markdown format
+   * Used on copying and pasting to the Paragraph
+   *
+   * @returns {{pattern: RegExp, parseFrom(ParagraphData): *, parseTo(string)}}
+   */
+  static get markdown() {
+    return {
+      /**
+       * Method describing how to represent the Block in a markdown format
+       * Used to export block value on copying
+       *
+       * @param {ParagraphData} blockData - saved block's data
+       * @returns {string}
+       */
+      parseTo(blockData) {
+        const div = document.createElement('div');
+
+        div.innerHTML = blockData.text;
+
+        let unwrappedText = '';
+
+        /**
+         * Unwrap unwanted <p>
+         */
+        if (div.children.length === 1 && div.children[0].tagName.toLowerCase() === 'p') {
+          unwrappedText = div.children[0].innerHTML;
+        } else {
+          unwrappedText = div.innerHTML;
+        }
+
+        return unwrappedText;
+      }
+    };
+  }
+
+  /**
+   * Method for sanitizing text from unwanted markup
+   * Used on saving and on parsing to Markdown
+   *
+   * @param {string} taintString - what to clean
+   * @returns {string}
+   */
+  sanitizeString(taintString) {
+    const sanitizerConfig = {
+      tags: {
+        a: {
+          href: true,
+          target: '_blank',
+          rel: 'nofollow'
+        },
+        b: true,
+        i: true,
+        p: {},
+        br: true,
+        em: true,
+        span: el => el.classList.contains('cdx-marked-text'),
+        mark: el => el.classList.contains('cdx-marked-text'),
+      }
+    };
+    let text;
+
+    text = this.api.sanitize(taintString, sanitizerConfig, true);
+    text = text.trim();
+
+    return text;
+  }
+
+  /**
+   * Destroys module data
+   */
+  destroy() {
+    this.wrapper = null;
+  }
+}

@@ -1,0 +1,114 @@
+/**
+ * @typedef {object} EmbedData
+ * @property {AndropovResponse} video
+ * @property {string} title
+ */
+
+/**
+ * @typedef {{data: {external_service: {name, id}, height, width, time, thumbnail}, render: string, type: string}} AndropovResponse
+ */
+/**
+ * Embed (Video) Tool for CodeX Editor
+ */
+class Embed {
+  /**
+   * Enable to showing inline toolbar
+   * True for all Inline Tools, or array for specified
+   * @return {Boolean|string[]}
+   */
+  static get inlineToolbar() {
+    return true;
+  }
+
+  static get contentless(){
+    return true;
+  }
+
+  /**
+   * @param {Api} api - CodeX Editor Api
+   */
+  constructor({ api }) {
+    this.api = api;
+    this.andropovResponse = undefined;
+    this.nodes = {
+      input: undefined,
+      wrapper: undefined,
+      caption: undefined,
+    };
+  }
+
+  /**
+   * @param {EmbedData} data
+   */
+  render(data) {
+    if (data && data.video && data.video.data && data.video.data.external_service) {
+      /**
+       * @type {AndropovResponse}
+       */
+      this.andropovResponse = data.video;
+      /**
+       * Support server-side rendering
+       */
+      if (!data.video.render) {
+        return this._createErrorBlock('Видео недоступно. Попробуйте повторить позднее');
+      }
+
+      this.nodes.wrapper = document.createElement('div');
+      this.nodes.wrapper.classList.add('embed-block', 'cdx-tool');
+      // this.nodes.wrapper.style.minHeight = data.video.data.height + 'px';
+      this.nodes.wrapper.innerHTML = this.andropovResponse.render;
+
+      this.nodes.caption = document.createElement('div');
+      this.nodes.caption.classList.add('cdx-input', 'embed-block__caption');
+      this.nodes.caption.contentEditable = true;
+      this.nodes.caption.innerHTML = data.title || '';
+
+      this.nodes.wrapper.appendChild(this.nodes.caption);
+
+      return this.nodes.wrapper;
+    } else {
+      return this._createErrorBlock('Блок не доступен');
+    }
+  }
+
+  /**
+   * Fallback block for case if Andropov does not return render
+   * @return {HTMLDivElement}
+   * @param {string} message - error message text
+   * @private
+   */
+  _createErrorBlock(message){
+    const errorBlock = document.createElement('div');
+
+    errorBlock.classList.add('embed-block__error');
+    errorBlock.textContent = message;
+
+    return errorBlock;
+  }
+
+  /**
+   * @return {Promise.<EmbedData>}
+   */
+  save() {
+    const sanitizerConfig = {
+      tags: {
+        a: {
+          href: true,
+          target: '_blank',
+          rel: 'nofollow'
+        },
+        b: true,
+        i: true
+      }
+    };
+
+    if (!this.andropovResponse) {
+      return;
+    }
+
+    return Promise.resolve({
+      video: this.andropovResponse,
+      title: this.api.sanitize(this.nodes.caption.innerHTML, sanitizerConfig, true) || ''
+    });
+  }
+}

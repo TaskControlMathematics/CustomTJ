@@ -1,0 +1,45 @@
+.ce-paragraph {
+  padding: 6px 0 !important;
+  line-height: 1.6em;
+}
+.ce-paragraph p {
+  margin: 1.2em 0;
+}
+.ce-paragraph p:first-of-type{
+  margin-top: 0;
+}
+.ce-paragraph p:last-of-type{
+  margin-bottom: 0;
+}
+.ce-paragraph__icon {
+  background-image: url(icon-text.svg);
+  background-size: auto 10px;
+}
+
+/**
+* Empty paragraph placeholder
+*/
+.ce-block--empty .ce-paragraph::before {
+  content : attr(data-placeholder);
+  color: #818181;
+  visibility: hidden;
+  /* Firefox puts cursor after placeholder, so make it zero width */
+  display: inline-block;
+  width: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ce-block--empty .ce-paragraph:focus::before {
+  visibility: visible;
+}
+
+.codex-editor--toolbox-opened .ce-paragraph::before {
+  visibility: hidden;
+}
+
+@media all and (max-width: 560px){
+  .ce-block--empty .ce-paragraph::before {
+    visibility: hidden;
+  }
+}

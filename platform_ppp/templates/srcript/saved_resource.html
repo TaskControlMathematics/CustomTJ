@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!-- saved from url=(0020)https://tjournal.ru/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta name="author" content="foldwrap.com"> <title>970x250 vc</title> <meta name="ad.size" content="width=100%,height=250"> <style>
+	canvas {cursor: pointer;}
+</style>  <script src="./createjs-2015.11.26.min.js.Без названия"></script> <script src="./script.min.js.Без названия"></script> <script>
+var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+function init() {
+	canvas = document.getElementById("canvas");
+	anim_container = document.getElementById("animation_container");
+	dom_overlay_container = document.getElementById("dom_overlay_container");
+	var comp=AdobeAn.getComposition("74C11B18F33A48F9905187298DB96078");
+	var lib=comp.getLibrary();
+	var loader = new createjs.LoadQueue(false,null,true);
+	loader.addEventListener("fileload", function(evt){handleFileLoad(evt,comp)});
+	loader.addEventListener("complete", function(evt){handleComplete(evt,comp)});
+	var lib=comp.getLibrary();
+	loader.loadManifest(lib.properties.manifest);
+}
+function handleFileLoad(evt, comp) {
+	var images=comp.getImages();	
+	if (evt && (evt.item.type == "image")) { images[evt.item.id] = evt.result; }	
+}
+function handleComplete(evt,comp) {
+	//This function is always called, irrespective of the content. You can use the variable "stage" after it is created in token create_stage.
+	var lib=comp.getLibrary();
+	var ss=comp.getSpriteSheet();
+	var queue = evt.target;
+	var ssMetadata = lib.ssMetadata;
+	for(i=0; i<ssMetadata.length; i++) {
+		ss[ssMetadata[i].name] = new createjs.SpriteSheet( {"images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames} )
+	}
+	exportRoot = new lib.widthx250();
+	stage = new lib.Stage(canvas);	
+	//Registers the "tick" event listener.
+	fnStartAnimation = function() {
+		stage.addChild(exportRoot);
+		createjs.Ticker.setFPS(lib.properties.fps);
+		createjs.Ticker.addEventListener("tick", stage);
+	}	    
+	//Code to support hidpi screens and responsive scaling.
+	AdobeAn.makeResponsive(false,'both',false,2,[canvas,anim_container,dom_overlay_container]);	
+	AdobeAn.compositionLoaded(lib.properties.id);
+	fnStartAnimation();
+}
+</script> <!-- write your code here --> </head> <body onload="init();" style="margin:0px;" marginwidth="0" marginheight="0"> 	<div id="animation_container" style="background-color:rgba(255, 255, 255, 1.00); width:970px; height:250px"> 		<a href="https://ads.adfox.ru/228129/goLink?ad-session-id=5422391633971871923&amp;puid5=1&amp;hash=4cf51fd40f78e031&amp;puid9=0&amp;sj=6vEPcFIE-GWUYEJtCQvTvDWDMRe1CJHSzZYAmVNkRJ6ZveH88t5rgAr9cYxv5g%3D%3D&amp;rand=mkruuwi&amp;rqs=JONqnUl5sStEb2RhByrve0wMfljvF7V1&amp;pr=dbgpjio&amp;p1=bxrvu&amp;ytt=404621224052757&amp;p5=kgflp&amp;ybv=0.44768&amp;p2=ezfl&amp;ylv=0.44768&amp;pf=https%3A%2F%2Fad.doubleclick.net%2Fddm%2Ftrackclk%2FN1418862.2207304DISPLAY%2FB26396687.313001315%3Bdc_trk_aid%3D505837947%3Bdc_trk_cid%3D157204639%3Bdc_lat%3D%3Bdc_rdid%3D%3Btag_for_child_directed_treatment%3D%3Btfua%3D%3Bltd%3D" target="_blank"><canvas id="canvas" width="1898" height="312" style="position: absolute; display: block; background-color: rgb(255, 255, 255); width: 1519px; height: 250px;"></canvas></a> 		<div id="dom_overlay_container" style="pointer-events:none; overflow:hidden; width:970px; height:250px; position: absolute; left: 0px; top: 0px; display: block;"> 		</div> 	</div>  
+            
+        <script>
+            (function () {
+                const windowParent = window.parent;
+                const onChangeFocus = function() {
+                    const hasFocus = document.hasFocus();
+                    windowParent.postMessage({
+                        type: 'focus-updated',
+                        hasFocus: hasFocus,
+                        id: 'ddd74c',
+                    }, '*');
+                    window.removeEventListener('focus', onChangeFocus);
+                };
+                window.addEventListener('focus', onChangeFocus);
+            })();
+        </script>
+    
+            <script>
+                if(window.onCodeLoad){window.onCodeLoad();}
+            </script></body></html>

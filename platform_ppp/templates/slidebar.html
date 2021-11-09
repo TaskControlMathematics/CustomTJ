@@ -1,0 +1,43 @@
+<div class="layout__left-column layout__sticky">
+  <div data-v-23da34b5="" class="sidebar">
+    <div data-v-23da34b5="" class="sidebar__header">
+      <div data-v-23da34b5="" class="site-header-burger">
+       
+      </div>
+     
+    </div>
+    <div data-v-23da34b5="" class="sidebar__scroll vb vb-visible" style="position: relative; overflow: hidden;">
+      <div data-v-23da34b5="" class="sidebar__widgets_parent vb-content" style="display: block; overflow: hidden scroll; height: 100%; width: 100%;">
+
+        
+        <div data-v-4087d855="" data-v-23da34b5="" class="sidebar-tree-list sidebar-tree-list--limited" free-height="65.4000244140625">
+          <!---->
+          <!---->
+          <!---->
+          {% for category in all_categories %}
+          <div data-v-1a27d7bb="" data-v-4087d855="" href="https://tjournal.ru/opinions" data-gtm="Sidebar — Subscriptions — Item 1" class="sidebar-tree-list-item sidebar-tree-list-item--active sidebar-tree-list-item--with-image">
+            <a data-v-1a27d7bb="" href="{% url 'app:category_page' category.id %}" class="sidebar-tree-list-item__link">
+              <div data-v-1a27d7bb="" class="sidebar-tree-list-item__image">
+              <!-- 	<img data-v-1a27d7bb="" data-src="https://leonardo.osnova.io/7364676d-692b-5858-b614-b3bf26d86c4b/-/scale_crop/64x64/-/format/webp/" src="{% static 'saved_resource" lazy="loaded"> -->
+              </div>
+              <p data-v-1a27d7bb="" class="sidebar-tree-list-item__name">{{category}}</p>
+              <!---->
+              <div data-v-1a27d7bb="" class="sidebar-tree-list-item__favourite">
+                <svg data-v-1a27d7bb="" height="13" width="13" class="icon icon--ui_pin_stroked">
+                  <use xlink:href="#ui_pin_stroked"></use>
+                </svg>
+              </div>
+              <!---->
+            </a>
+            <!---->
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="vb-dragger" style="position: absolute; height: 505px; top: 0px;">
+        <div class="vb-dragger-styler"></div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar__tint"></div>
+</div>

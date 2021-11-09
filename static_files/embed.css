@@ -1,0 +1,34 @@
+
+/**
+ * Toolbar icon
+ * ==============================
+ */
+
+
+
+/**
+ * Block wrapper
+ * ==============================
+ */
+.embed-block__caption {
+  margin-top: 8px;
+}
+
+.embed-block__caption:empty::before {
+  content : 'Подпись';
+  color: #ACBDCB;
+}
+
+.embed-block iframe {
+  width: 100% !important;
+  border: 0 !important;
+  max-width: 600px;
+}
+
+
+.embed-block__error {
+  font-size: inherit;
+  border: 1px solid #FE4D4A;
+  color: #FE4D4A;
+  padding: 10px 12px;
+}

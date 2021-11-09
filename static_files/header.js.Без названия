@@ -1,0 +1,396 @@
+/**
+ * @typedef {object} HeaderData
+ * @property {string} text - header text
+ * @property {string} style - 'h1' — 'h6'
+ */
+
+/**
+ * @typedef {import('../../src/modules/api').default} Api
+ * @typedef {import('../../src/models/block').BlockApi} BlockApi
+ */
+
+/**
+ * Header Tool for CodeX Editor
+ *
+ * @author CMTT
+ */
+class Header {
+  /**
+   * Plugin title that will be shown on toolbox hover
+   *
+   * @returns {string}
+   */
+  static get title() {
+    return 'Заголовок';
+  }
+
+  /**
+   * Enable to showing inline toolbar
+   *
+   * @returns {string[]}
+   */
+  static get inlineToolbar() {
+    return [ 'link' ];
+  }
+
+  /**
+   * Toolbox icon class name
+   *
+   * @returns {string}
+   */
+  static get iconClassname() {
+    return Header.CSS.toolbarIcon;
+  }
+
+  /**
+   * This block can not be deleted or moved
+   */
+  static get fixed() {
+    return true;
+  }
+
+  /**
+   * Config of tags that can be represented by this plugin
+   * Uses on pasting text to the Editor
+   *
+   *
+   * @typedef {object} handleTagsConfig
+   * @property {Array} tags    — list of HTML tag names
+   * @property {string} fill   - innerHTML of handled tag will be passed
+   *                             to the render method's data with this key
+   *
+   * @returns {handleTagsConfig}
+   */
+  static get handleTags() {
+    return {
+      tags: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'],
+      fill: 'text',
+    };
+  }
+
+  /**
+   * Config describing how to convert the Block data to/from the markdown format
+   * Used on copying and pasting to the Paragraph
+   *
+   * @returns {{pattern: RegExp, parseFrom(HeaderData): *, parseTo(string)}}
+   */
+  static get markdown() {
+    return {
+      /**
+       * Markdown pattern to match the Block
+       */
+      pattern: /^#+\s*\S/,
+      /**
+       * Method that accepts markdown string patched by specified pattern and return a Block data
+       *
+       * @param {string} string
+       * @returns {HeaderData}
+       */
+      parseFrom(string) {
+        const hashCount = (string.match(/#/g) || []).length;
+
+        // trim hashes
+        while (string.charAt(0) === '#') {
+          string = string.substring(1);
+        }
+
+        return {
+          text: string,
+          style: 'h' + Math.min(6, Math.max(1, hashCount))
+        };
+      },
+
+      /**
+       * Method describing how to represent the Block in a markdown format
+       * Used to export block value on copying
+       *
+       * @param {HeaderData} blockData - saved block's data
+       * @returns {string}
+       */
+      parseTo(blockData) {
+        const hashCount = parseInt(blockData.style.substring(1), 10);
+
+        return '#'.repeat(hashCount) + ' ' + blockData.text;
+      }
+    };
+  }
+
+  /**
+   * Header constructor
+   * @param {object} params - constructor params
+   * @param {Api} params.api - CodeX Editor API
+   * @param {BlockApi} params.block - block API
+   */
+  constructor({ api, block }) {
+    this.api = api;
+    this.blockApi = block;
+    this.data = {};
+    this.defaultStyle = 'h2';
+    this.nodes = {
+      wrapper: undefined,
+      externalSettings: []
+    };
+  }
+
+  /**
+   * CSS classes
+   *
+   * @returns {{wrapper: string, toolbarIcon: string, settingsHolder: string, settingsItem: string, settingsItemActive: string}}
+   */
+  static get CSS() {
+    return {
+      wrapper: 'ce-header',
+      toolbarIcon: 'ce-icon-header',
+      settingsHolder: 'cdx-plugin-settings--horisontal',
+      settingsItem: 'cdx-plugin-settings__item',
+      settingsItemActive: 'cdx-plugin-settings__item--active',
+      externalSettingsHolder: 'cdx-plugin-external-settings',
+      externalSettingsItem: 'cdx-plugin-external-settings__item',
+      externalSettingsItemActive: 'cdx-plugin-external-settings__item--active'
+    };
+  }
+
+  /**
+   * Create UI with data
+   *
+   * @param {HeaderData} data
+   */
+  render(data = {}) {
+    this.data = {
+      text: data.text || '',
+      style: data.style || this.defaultStyle
+    };
+
+    this.nodes.wrapper = this._createHeaderTag(this.data.style, this.data.text);
+
+    return this.nodes.wrapper;
+  }
+
+  /**
+   * Create H1—H6 tag
+   *
+   * @param {string} style - h1 — h6
+   * @param {string} text - inner HTML
+   * @private
+   */
+  _createHeaderTag(style, text) {
+    const tag = document.createElement(style);
+
+    tag.innerHTML = text || '';
+    tag.classList.add(Header.CSS.wrapper);
+    tag.setAttribute('data-placeholder', 'Заголовок');
+    tag.contentEditable = true;
+
+    return tag;
+  }
+
+  /**
+   * Extract data from UI
+   *
+   * @param {HTMLElement} blockContent
+   * @returns {HeaderData}
+   */
+  save(blockContent) {
+    const sanitizerConfig = {
+      tags: {
+        a: {
+          href: true,
+          target: '_blank',
+          rel: 'nofollow'
+        },
+        span: el => el.classList.contains('cdx-marked-text'),
+        mark: el => el.classList.contains('cdx-marked-text'),
+      }
+    };
+
+    return {
+      style: this.data.style,
+      text: this.api.sanitize(blockContent.innerHTML, sanitizerConfig, true)
+    };
+  }
+
+  /**
+   * Validate saved data
+   *
+   * @param {HeaderData} data
+   * @returns {boolean}
+   */
+  validate(data) {
+    if (data.text.trim() === '') {
+      return false;
+    }
+
+    if (data.style.trim() === '') {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Settings panel content
+   *  ┌--------------┐
+   *     H1  H2  H3
+   * └--------------┘
+   *
+   * @returns {Element} element contains all settings
+   */
+  makeSettings() {
+    const styles = {
+      h2: 'H2',
+      h3: 'H3',
+      h4: 'H4'
+    };
+    const settingsWrapper = document.createElement('div');
+    const inlineButtonsWrapper = document.createElement('div');
+
+    inlineButtonsWrapper.classList.add(Header.CSS.settingsHolder);
+
+    /**
+     * Button for convert Header to Paragraph
+     */
+    settingsWrapper.appendChild(this.createConverterButton());
+    settingsWrapper.appendChild(inlineButtonsWrapper);
+
+    Object.entries(styles).forEach(([style, name]) => {
+      const item = document.createElement('span');
+
+      item.classList.add(Header.CSS.settingsItem);
+      item.classList.toggle(Header.CSS.settingsItemActive, style === this.data.style);
+      item.textContent = name;
+      inlineButtonsWrapper.appendChild(item);
+
+      item.addEventListener('click', (event) => {
+        this._toggleStyle(style);
+
+        this.blockApi.dispatchModifiedEvent();
+
+        /** Close settings after replacing */
+        this.api.closeEveryBlockSettings();
+      });
+    });
+
+    return settingsWrapper;
+  }
+
+  /**
+   * Create button for convert Header to Paragraph
+   *
+   * @private
+   *
+   * @param {boolean} onlyIcon - pass true to create a toggler without the text label
+   * @returns {HTMLDivElement}
+   */
+  createConverterButton(onlyIcon) {
+    const div = document.createElement('div');
+
+    div.classList.add(Header.CSS.settingsItem);
+
+    div.innerHTML = `
+      <svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+        <path d="M.833 4.167v5.417c0 .92.747 1.666 1.667 1.666h2.917" stroke="#000" stroke-width="1.667" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4.167 9.167l1.666 2.083-1.666 2.084M8.333 10.833h10.833M8.333 15h6.666M8.333 6.667h6.666" stroke="#000" stroke-width="1.667" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      ${onlyIcon ? '' : 'Сделать текстом'}
+    `;
+
+    div.addEventListener('click', () => {
+      /**
+       * Remember block ID to replace it
+       *
+       * @type {string}
+       */
+      const currentBlockId = this.api.getCurrentBlockId();
+
+      this.api.oustBlock(currentBlockId, {
+        type: 'text',
+        data: {
+          text: this.api.sanitize(this.nodes.wrapper.innerHTML),
+        }
+      });
+
+      this.api.closeEveryBlockSettings();
+      this.api.toolbar.close();
+    });
+
+    return div;
+  }
+
+  /**
+   * Creates controls for displaying at the Mobile Toolbar
+   *
+   * @deprecated Currently deprecated, but left for the future, see {@link ../../docs/mobile-toolbar.md#deprecation-notice}
+   *
+   * @returns {Element}
+   */
+  makeMobileToolbarSettings() {
+    return this.createConverterButton(true);
+  }
+
+  /**
+   * Same as makeSettings but for 'external' additional zone
+   *
+   * @deprecated this feature is removed currently. Maybe it will be back.
+   */
+  makeExternalSettings() {
+    const styles = {
+      h2: 'H2',
+      h3: 'H3',
+      h4: 'H4'
+    };
+    const holder = document.createElement('div');
+
+    holder.classList.add(Header.CSS.externalSettingsHolder);
+    this.nodes.externalSettings = [];
+
+    Object.entries(styles).forEach(([style, name]) => {
+      const item = document.createElement('span');
+
+      item.classList.add(Header.CSS.externalSettingsItem);
+      item.classList.toggle(Header.CSS.externalSettingsItemActive, style === this.data.style);
+      item.textContent = name;
+      item.dataset.style = style;
+      holder.appendChild(item);
+
+      this.nodes.externalSettings.push(item);
+
+      item.addEventListener('click', (event) => {
+        this._toggleStyle(style);
+        this.selectActiveExternalSetting();
+      });
+    });
+
+    return holder;
+  }
+
+  /**
+   * Mark active external setting with CSS modifier
+   */
+  selectActiveExternalSetting() {
+    this.nodes.externalSettings.forEach(item => {
+      item.classList.toggle(Header.CSS.externalSettingsItemActive, item.dataset.style === this.data.style);
+    });
+  }
+
+  /**
+   * Enable new header style
+   *
+   * @param {string} style - style name
+   * @private
+   */
+  _toggleStyle(style) {
+    const currentTagContent = this.nodes.wrapper.innerHTML;
+    const newTag = this._createHeaderTag(style, currentTagContent);
+
+    this.nodes.wrapper.parentNode.replaceChild(newTag, this.nodes.wrapper);
+    this.nodes.wrapper = newTag;
+    this.data.style = style;
+  }
+
+  /**
+   * Destroyer
+   */
+  destroy() {
+    this.nodes = null;
+  }
+}

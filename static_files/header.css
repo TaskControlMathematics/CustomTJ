@@ -1,0 +1,85 @@
+/**
+* Plugin styles
+*/
+.ce-icon-header {
+    background-image: url(icon-header.svg);
+    background-size: auto 13px;
+}
+
+.ce-header {
+    padding: 6px 0;
+    margin: 0;
+    line-height: 1.4em;
+}
+.ce-header p,
+.ce-header div{
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+h1.ce-header,
+h2.ce-header,
+h3.ce-header,
+h4.ce-header,
+h5.ce-header,
+h6.ce-header {
+    font-weight: 600;
+    line-height: 1.35em;
+}
+
+h1.ce-header {
+    font-size: 2rem;
+}
+
+h2.ce-header {
+    font-size: 1.6rem;
+}
+
+h3.ce-header {
+    font-size: 1.375rem;
+}
+
+h4.ce-header {
+    font-size: 1.2rem;
+}
+
+h5.ce-header {
+    font-size: 0.83rem;
+}
+
+h6.ce-header {
+    font-size: 0.75rem;
+}
+
+
+/** H e a d e r - settings */
+.ce_plugin_header--select_button{
+    display: block;
+    color: #306ac7;
+    cursor: pointer;
+    line-height: 1.3em;
+}
+    .ce_plugin_header--select_button:not(:last-of-type){
+        margin-bottom: 1.5em;
+    }
+    .ce_plugin_header--select_button:hover{
+        color: #a1b4ec;
+    }
+
+
+/**
+* Empty header placeholder
+*/
+.ce-block--empty .ce-header::before{
+    content : attr(data-placeholder);
+    color: #acbdcb;
+    transition: opacity 200ms ease;
+    /* Firefox puts cursor after placeholder, so make it zero width */
+    display: inline-block;
+    width: 0;
+    white-space: nowrap;
+    pointer-events: none;
+}
+.ce-header:focus::before{
+    opacity: .4;
+}
